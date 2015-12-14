@@ -1,6 +1,8 @@
 package com.brentvatne.react;
 
+import android.content.res.Resources;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Handler;
 import android.util.Log;
 import com.facebook.react.bridge.Arguments;
@@ -9,6 +11,9 @@ import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
 import com.yqritc.scalablevideoview.ScalableType;
 import com.yqritc.scalablevideoview.ScalableVideoView;
+
+import java.io.File;
+import java.io.FileInputStream;
 
 public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnPreparedListener, MediaPlayer
         .OnErrorListener, MediaPlayer.OnBufferingUpdateListener, MediaPlayer.OnCompletionListener {
