@@ -123,11 +123,25 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
             if (isNetwork) {
                 setDataSource(uriString);
             } else {
-                setRawData(mThemedReactContext.getResources().getIdentifier(
-                        uriString,
-                        "raw",
-                        mThemedReactContext.getPackageName()
-                ));
+                try {
+                    setRawData(mThemedReactContext.getResources().getIdentifier(
+                            uriString,
+                            "raw",
+                            mThemedReactContext.getPackageName()
+                    ));
+                } catch (Resources.NotFoundException nfe) {
+                    String path;
+                    final Uri uri = Uri.parse(uriString);
+                    final String scheme = uri.getScheme();
+                    if ("file".equals(scheme)) {
+                        path = uri.getPath();
+                        File file = new File(path);
+                        FileInputStream inputStream = new FileInputStream(file);
+                        setDataSource(inputStream.getFD());
+                    } else {
+                        throw nfe;
+                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
