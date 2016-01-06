@@ -1,10 +1,13 @@
 package com.brentvatne.react;
 
+import android.R;
 import android.content.res.Resources;
 import android.media.MediaPlayer;
+import android.widget.MediaController;
 import android.net.Uri;
 import android.os.Handler;
 import android.util.Log;
+import android.view.MotionEvent;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.ThemedReactContext;
@@ -16,7 +19,7 @@ import java.io.File;
 import java.io.FileInputStream;
 
 public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnPreparedListener, MediaPlayer
-        .OnErrorListener, MediaPlayer.OnBufferingUpdateListener, MediaPlayer.OnCompletionListener {
+        .OnErrorListener, MediaPlayer.OnBufferingUpdateListener, MediaPlayer.OnCompletionListener, MediaController.MediaPlayerControl {
 
     public enum Events {
         EVENT_LOAD_START("onVideoLoadStart"),
@@ -70,6 +73,8 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
     private float mVolume = 1.0f;
     private float mRate = 1.0f;
 
+    private MediaController mcontroller;
+    private Handler handler = new Handler();
     private boolean mMediaPlayerValid = false; // True if mMediaPlayer is in prepared, started, or paused state.
     private int mVideoDuration = 0;
     private int mVideoBufferedDuration = 0;
@@ -109,6 +114,7 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
             mMediaPlayer.setOnPreparedListener(this);
             mMediaPlayer.setOnBufferingUpdateListener(this);
             mMediaPlayer.setOnCompletionListener(this);
+            mcontroller = new MediaController(mThemedReactContext);
         }
     }
 
@@ -239,6 +245,15 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
     public void onPrepared(MediaPlayer mp) {
         mMediaPlayerValid = true;
         mVideoDuration = mp.getDuration();
+        mcontroller.setMediaPlayer(this);
+        mcontroller.setAnchorView(this);
+        handler.post(new Runnable() {
+
+            public void run() {
+                mcontroller.setEnabled(true);
+                mcontroller.show();
+            }
+        });
 
         WritableMap event = Arguments.createMap();
         event.putDouble(EVENT_PROP_DURATION, mVideoDuration / 1000.0);
@@ -301,5 +316,60 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         setSrc(mSrcUriString, mSrcType, mSrcIsNetwork);
+    }
+
+
+    /* Controls */
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        /*
+         * the MediaController will hide after 3 seconds - tap the screen to
+         * make it appear again
+         */
+        if (mcontroller != null) {
+            mcontroller.show();
+        }
+        return false;
+    }
+    //mediacontroller implemented methods
+
+    public void start() {
+        mMediaPlayer.start();
+    }
+
+    public void pause() {
+        mMediaPlayer.pause();
+    }
+
+    public int getDuration() {
+        return mMediaPlayer.getDuration();
+    }
+
+    public int getCurrentPosition() {
+        return mMediaPlayer.getCurrentPosition();
+    }
+
+    public boolean isPlaying() {
+        return mMediaPlayer.isPlaying(); 
+    }
+
+    public int getBufferPercentage() {
+        return 0;
+    }
+
+    public boolean canPause() {
+        return true;
+    }
+
+    public boolean canSeekBackward() {
+        return true;
+    }
+
+    public boolean canSeekForward() {
+        return true;
+    }
+
+    public int getAudioSessionId() {
+        return mMediaPlayer.getAudioSessionId();
     }
 }
